@@ -19,12 +19,14 @@ Error: Call to function 'NativeDatabase.constructor' has been rejected.
    openDatabaseSync('local.db')
    ```
 
-2. **expo-sqlite with file: URL** → FAILS
+2. **expo-sqlite with file: URL** → FAILS (Android crash)
    ```typescript
    openDatabaseSync('local.db', {
      libSQLOptions: { url: 'file:local.db', authToken: '' }
    })
    ```
+
+   On Android, this configuration causes the app to crash during database open. The `file:` URL is passed through to the native libSQL `libsql_open_sync_with_config` path as `primary_url`, which expects a remote libSQL server URL plus valid auth token. Using a `file:` URL here is not supported by the current expo-sqlite libSQL integration, and results in a native error/exception rather than a handled JS error.
 
 ## libSQL C Library Supports Local Databases
 
