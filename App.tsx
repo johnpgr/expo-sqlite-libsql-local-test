@@ -1,8 +1,7 @@
-import { createClient } from '@libsql/client';
 import { StatusBar } from 'expo-status-bar';
 import { openDatabaseSync } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface TestResult {
   name: string;
@@ -14,68 +13,46 @@ export default function App() {
   const [results, setResults] = useState<TestResult[]>([]);
 
   useEffect(() => {
-    async function runTests() {
-      const testResults: TestResult[] = [];
+    const testResults: TestResult[] = [];
 
-      // Test 1: expo-sqlite without libSQLOptions
-      try {
-        const db = openDatabaseSync('local.db');
-        db.execSync('SELECT 1');
-        testResults.push({
-          name: 'expo-sqlite: openDatabaseSync("local.db")',
-          success: true,
-        });
-      } catch (e: any) {
-        testResults.push({
-          name: 'expo-sqlite: openDatabaseSync("local.db")',
-          success: false,
-          error: e.message,
-        });
-      }
-
-      // Test 2: expo-sqlite with file:// URL in libSQLOptions
-      try {
-        const db = openDatabaseSync('local2.db', {
-          libSQLOptions: {
-            url: 'file:local2.db',
-            authToken: '',
-          },
-        });
-        db.execSync('SELECT 1');
-        testResults.push({
-          name: 'expo-sqlite: file: URL in libSQLOptions',
-          success: true,
-        });
-      } catch (e: any) {
-        testResults.push({
-          name: 'expo-sqlite: file: URL in libSQLOptions',
-          success: false,
-          error: e.message,
-        });
-      }
-
-      // Test 3: @libsql/client with file: URL (demonstrates libSQL capability)
-      try {
-        const client = createClient({
-          url: 'file:local3.db',
-        });
-        await client.execute('SELECT 1');
-        testResults.push({
-          name: '@libsql/client: file:local3.db',
-          success: true,
-        });
-      } catch (e: any) {
-        testResults.push({
-          name: '@libsql/client: file:local3.db',
-          success: false,
-          error: e.message,
-        });
-      }
-
-      setResults(testResults);
+    // Test 1: expo-sqlite without libSQLOptions
+    try {
+      const db = openDatabaseSync('local.db');
+      db.execSync('SELECT 1');
+      testResults.push({
+        name: 'expo-sqlite: openDatabaseSync("local.db")',
+        success: true,
+      });
+    } catch (e: any) {
+      testResults.push({
+        name: 'expo-sqlite: openDatabaseSync("local.db")',
+        success: false,
+        error: e.message,
+      });
     }
 
-    runTests();
+    // Test 2: expo-sqlite with file: URL in libSQLOptions
+    try {
+      const db = openDatabaseSync('local2.db', {
+        libSQLOptions: {
+          url: 'file:local2.db',
+          authToken: '',
+        },
+      });
+      db.execSync('SELECT 1');
+      testResults.push({
+        name: 'expo-sqlite: file: URL in libSQLOptions',
+        success: true,
+      });
+    } catch (e: any) {
+      testResults.push({
+        name: 'expo-sqlite: file: URL in libSQLOptions',
+        success: false,
+        error: e.message,
+      });
+    }
+
+    setResults(testResults);
   }, []);
 
   return (
@@ -106,11 +83,19 @@ export default function App() {
       )}
 
       <View style={styles.note}>
-        <Text style={styles.noteTitle}>Expected Behavior:</Text>
+        <Text style={styles.noteTitle}>libSQL Supports Local Databases:</Text>
         <Text style={styles.noteText}>
-          libSQL supports local-only databases via file: URLs.{'\n'}
-          expo-sqlite should expose this capability when useLibSQL is enabled.
+          The libSQL library supports local-only embedded databases via file: URLs.
+          {'\n\n'}
+          Example: createClient({'{'} url: "file:local.db" {'}'})
+          {'\n\n'}
+          expo-sqlite should expose this capability.
         </Text>
+        <TouchableOpacity
+          onPress={() => Linking.openURL('https://docs.turso.tech/sdk/ts/reference#local-only')}
+        >
+          <Text style={styles.link}>View libSQL Documentation →</Text>
+        </TouchableOpacity>
       </View>
 
       <StatusBar style="auto" />
@@ -175,10 +160,16 @@ const styles = StyleSheet.create({
   },
   noteTitle: {
     fontWeight: 'bold',
-    marginBottom: 4,
+    marginBottom: 8,
   },
   noteText: {
     fontSize: 12,
     color: '#92400e',
+    marginBottom: 8,
+  },
+  link: {
+    fontSize: 12,
+    color: '#1d4ed8',
+    fontWeight: '600',
   },
 });

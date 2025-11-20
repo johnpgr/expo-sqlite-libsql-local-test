@@ -1,6 +1,6 @@
 # expo-sqlite libSQL Local Database Test
 
-Minimal reproduction demonstrating that expo-sqlite doesn't support local-only databases when `useLibSQL` is enabled, despite libSQL itself supporting this capability.
+Minimal reproduction demonstrating that expo-sqlite doesn't support local-only databases when `useLibSQL` is enabled, despite the underlying libsql C library supporting this capability.
 
 ## The Issue
 
@@ -26,20 +26,24 @@ Error: Call to function 'NativeDatabase.constructor' has been rejected.
    })
    ```
 
-3. **@libsql/client with file: URL** → Shows libSQL capability
-   ```typescript
-   createClient({ url: 'file:local.db' })
-   ```
+## libSQL C Library Supports Local Databases
 
-## libSQL Supports Local Databases
+expo-sqlite uses the [tursodatabase/libsql](https://github.com/tursodatabase/libsql) experimental C library.
 
-The libSQL library itself fully supports local-only embedded databases:
+The C header (`libsql.h`) exposes these database opening functions:
 
-- [libSQL documentation](https://docs.turso.tech/sdk/ts/reference#local-only) shows `file:` URL support
-- `createClient({ url: "file:local.db" })` creates an embedded database
-- No remote URL or auth token required
+```c
+// Local file database - NO URL/TOKEN REQUIRED
+int libsql_open_file(const char *path, libsql_database_t *out_db, const char **out_err_msg);
 
-expo-sqlite should expose this capability when `useLibSQL` is enabled.
+// Remote database
+int libsql_open_remote(const char *url, const char *auth_token, libsql_database_t *out_db, const char **out_err_msg);
+
+// Synced database (local + remote)
+int libsql_open_sync(const char *db_path, const char *primary_url, const char *auth_token, ...);
+```
+
+**The underlying library has `libsql_open_file()` for local-only databases**, but expo-sqlite doesn't expose this capability. It only calls the sync/remote functions that require URL and auth token.
 
 ## Use Case
 
@@ -62,7 +66,13 @@ npx expo run:android  # or run:ios
 
 When `useLibSQL` is enabled, should be able to:
 
-1. Open local-only database by omitting `libSQLOptions`, OR
+1. Open local-only database by omitting `libSQLOptions` (calls `libsql_open_file` internally), OR
 2. Use `file:` URL in `libSQLOptions.url` for embedded database
 
 This would allow apps to use local storage before user authentication, then switch to synced storage after login.
+
+## References
+
+- [tursodatabase/libsql](https://github.com/tursodatabase/libsql) - The libsql library
+- [expo-sqlite libsql.h](https://github.com/expo/expo/blob/main/packages/expo-sqlite/android/libsql/libsql.h) - C header showing available functions
+- [Turso local-only docs](https://docs.turso.tech/sdk/ts/reference#local-only) - TypeScript SDK local database support
