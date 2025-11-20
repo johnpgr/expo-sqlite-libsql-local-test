@@ -8,7 +8,12 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "plugins": [
-      ["expo-sqlite", { "useLibSQL": true }]
+      [
+        "expo-sqlite",
+        {
+          "useLibSQL": true
+        }
+      ]
     ],
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -16,7 +21,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.thejonyboybr.exposqlitelibsqltest"
     },
     "android": {
       "adaptiveIcon": {
@@ -24,7 +30,8 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.thejonyboybr.exposqlitelibsqltest"
     },
     "web": {
       "favicon": "./assets/favicon.png"
